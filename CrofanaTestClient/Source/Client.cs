@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using Crofana.IoC;
+using System.Runtime.Serialization;
 
 namespace CrofanaTestClient
 {
@@ -37,15 +39,18 @@ namespace CrofanaTestClient
                 Console.WriteLine($"POST CONSTRUCT: {obj.GetType().FullName}");
             }
         }
+        [Serializable]
+        public class Character
+        {
+            public int id;
+            public string name;
+            private int atk;
+            public int def { get; }
+            private int agi { get; set; }
+        }
         static void Main(string[] args)
         {
-            StandardCrofanaObjectFactory cof = new StandardCrofanaObjectFactory();
-
-            var co = cof.GetObject<CrofanaObject1>();
-
-            Console.WriteLine(co.CO2.x);
-            Console.WriteLine(co.co3.x);
-            Console.WriteLine(co.CO2.co1.x);
+            Console.WriteLine(typeof(int).IsGenericType);
         }
     }
 }

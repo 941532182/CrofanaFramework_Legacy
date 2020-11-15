@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crofana.Extension", "Crofan
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrofanaTestClient", "CrofanaTestClient\CrofanaTestClient.csproj", "{21EB0300-9E58-429C-AE42-0700B18B3A19}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crofana.Excel", "Crofana.Excel\Crofana.Excel.csproj", "{A85C298A-660C-4B17-A1F0-E1BC47D95029}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{21EB0300-9E58-429C-AE42-0700B18B3A19}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{21EB0300-9E58-429C-AE42-0700B18B3A19}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{21EB0300-9E58-429C-AE42-0700B18B3A19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A85C298A-660C-4B17-A1F0-E1BC47D95029}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A85C298A-660C-4B17-A1F0-E1BC47D95029}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A85C298A-660C-4B17-A1F0-E1BC47D95029}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A85C298A-660C-4B17-A1F0-E1BC47D95029}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

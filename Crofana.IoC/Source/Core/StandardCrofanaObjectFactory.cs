@@ -32,7 +32,7 @@ namespace Crofana.IoC
         }
         #endregion
 
-        #region ICrofanaObjectFactory
+        #region ICrofanaObjectFactory Interface
         public object GetObject(Type type)
         {
             if (!type.HasAttributeRecursive<CrofanaObjectAttribute>())

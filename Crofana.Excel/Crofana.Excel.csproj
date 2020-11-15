@@ -8,8 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Crofana.Excel\Crofana.Excel.csproj" />
-    <ProjectReference Include="..\Crofana.Extension\Crofana.Extension.csproj" />
+    <Folder Include="Mapping\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SharpZipLib" Version="1.3.0" />
   </ItemGroup>
 
 </Project>

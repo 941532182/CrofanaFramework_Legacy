@@ -5,6 +5,7 @@ using System.Text;
 using System.Reflection;
 using System.Linq;
 
+using Crofana.Extension;
 using Crofana.Excel;
 
 namespace Crofana.Cache
@@ -12,6 +13,26 @@ namespace Crofana.Cache
     public class CPKSerializer : ICrofanaEntitySerializer
     {
         private static Type[] EMPTY_TYPE_ARRAY = { };
+
+        private Dictionary<Type, Func<string, object>> converters = new Dictionary<Type, Func<string, object>>();
+
+        public CPKSerializer()
+        {
+            converters[typeof(bool)] = x => bool.Parse(x);
+            converters[typeof(byte)] = x => byte.Parse(x);
+            converters[typeof(sbyte)] = x => sbyte.Parse(x);
+            converters[typeof(ushort)] = x => ushort.Parse(x);
+            converters[typeof(short)] = x => short.Parse(x);
+            converters[typeof(uint)] = x => uint.Parse(x);
+            converters[typeof(int)] = x => int.Parse(x);
+            converters[typeof(ulong)] = x => ulong.Parse(x);
+            converters[typeof(long)] = x => long.Parse(x);
+            converters[typeof(float)] = x => float.Parse(x);
+            converters[typeof(double)] = x => double.Parse(x);
+            converters[typeof(decimal)] = x => decimal.Parse(x);
+            converters[typeof(char)] = x => char.Parse(x);
+        }
+
         public void Deserialize(Stream stream, ICrofanaEntityManager target)
         {
             WorkBook wb = new WorkBook(stream);
@@ -30,9 +51,13 @@ namespace Crofana.Cache
                 if (entity == null)
                 {
                     entity = type.GetConstructor(EMPTY_TYPE_ARRAY).Invoke(null);
+                    DeserializeEntity(type, fields, ws1[i], entity);
                     target.AddEntity(entity);
                 }
-                DeserializeEntity(type, fields, ws1[i], entity);
+                else
+                {
+                    DeserializeEntity(type, fields, ws1[i], entity);
+                }
             }
         }
 
@@ -46,66 +71,37 @@ namespace Crofana.Cache
 
         private object CellToFieldType(Cell cell, FieldInfo field)
         {
-            return null;
-            /*string text = cell.Text;
+            string text = cell.Text;
             Type type = field.FieldType;
-            if (type == typeof(bool))
+            if (type.IsPrimitive)
+            {
+                return type.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { text });
+            }
+            else if (type.IsSubclassOf(typeof(Enum)))
+            {
+                return Enum.Parse(type, text, true);
+            }
+            else if (type == typeof(string))
+            {
+                return text;
+            }
+            else if (type.IsGenericType)
+            {
+                Type genericDef = type.GetGenericTypeDefinition();
+                if (genericDef == typeof(IList<>))
+                {
+
+                }
+                else if (genericDef == typeof(IDictionary<,>))
+                {
+
+                }
+            }
+            else if (type.HasAttributeRecursive<CrofanaEntityAttribute>())
             {
 
             }
-            else if (type == typeof(byte))
-            {
-
-            }
-            else if (type == typeof(sbyte))
-            {
-
-            }
-            else if (type == typeof(ushort))
-            {
-
-            }
-            else if (type == typeof(short))
-            {
-
-            }
-            else if (type == typeof(uint))
-            {
-
-            }
-            else if (type == typeof(int))
-            {
-
-            }
-            else if (type == typeof(ulong))
-            {
-
-            }
-            else if (type == typeof(long))
-            {
-
-            }
-            else if (type == typeof(float))
-            {
-
-            }
-            else if (type == typeof(double))
-            {
-
-            }
-            else if (type == typeof(decimal))
-            {
-
-            }
-            else if (type == typeof(char))
-            {
-
-            }
-            else if (type.GetGenericTypeDefinition)
-            {
-
-            }
-            else if (type.is*/
+            return null;
         }
     }
 }

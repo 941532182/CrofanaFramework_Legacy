@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Crofana.IoC;
 using System.Runtime.Serialization;
 
+using Crofana.Cache;
+
 namespace CrofanaTestClient
 {
     class Client
@@ -39,7 +41,6 @@ namespace CrofanaTestClient
                 Console.WriteLine($"POST CONSTRUCT: {obj.GetType().FullName}");
             }
         }
-        [Serializable]
         public class Character
         {
             public int id;
@@ -48,9 +49,22 @@ namespace CrofanaTestClient
             public int def { get; }
             private int agi { get; set; }
         }
+
+        [CrofanaEntity]
+        public class Weapon
+        {
+            [PrimaryKey]
+            public long Id;
+            public string Name;
+            public int ATK;
+        }
+
         static void Main(string[] args)
         {
-            Console.WriteLine(typeof(int).IsGenericType);
+            var manager = new StandardCrofanaEntityManager();
+            var serializer = new CPKSerializer();
+            manager.Deserialize(serializer, System.IO.File.OpenRead("test.xlsx"));
+            Console.WriteLine(manager.GetEntity<Weapon>(10001).ATK);
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
+using System.IO;
 
 using Crofana.Extension;
 
@@ -56,16 +57,18 @@ namespace Crofana.Cache
                 if (field != null)
                 {
                     cachedPKMemberMap[type] = field;
-                    return;
                 }
-                PropertyInfo prop = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                                        .Where(x => x.HasAttributeRecursive<PrimaryKeyAttribute>())
-                                        .FirstOrDefault();
-                if (prop != null)
+                else
                 {
-                    cachedPKMemberMap[type] = prop;
+                    PropertyInfo prop = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                        .Where(x => x.HasAttributeRecursive<PrimaryKeyAttribute>())
+                        .FirstOrDefault();
+                    if (prop != null)
+                    {
+                        cachedPKMemberMap[type] = prop;
+                    }
+                    throw new IllegalCrofanaEntityException(type, IllegalCrofanaEntityException.IllegalReason.NoPrimaryKey);
                 }
-                throw new IllegalCrofanaEntityException(type, IllegalCrofanaEntityException.IllegalReason.NoPrimaryKey);
             }
             MemberInfo cachedPKMember = cachedPKMemberMap[type];
             if (cachedPKMember.MemberType == MemberTypes.Field)
@@ -103,6 +106,11 @@ namespace Crofana.Cache
         #endregion
 
         #region Public Methods
+        public void Deserialize(ICrofanaEntitySerializer serializer, Stream stream)
+        {
+            serializer.Deserialize(stream, this);
+        }
+
         public void NewEntity()
         {
 

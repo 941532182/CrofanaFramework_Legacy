@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>DiaX</Authors>
+    <Company>Crofana</Company>
+    <Product>Crofana</Product>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crofana.Extension\Crofana.Extension.csproj" />
+  </ItemGroup>
+
+</Project>

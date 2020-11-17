@@ -57,6 +57,8 @@ namespace CrofanaTestClient
             public long Id;
             public string Name;
             public int ATK;
+            public IList<int> TestList;
+            public IDictionary<string, int> TestDict;
         }
 
         static void Main(string[] args)
@@ -65,6 +67,11 @@ namespace CrofanaTestClient
             var serializer = new CPKSerializer();
             manager.Deserialize(serializer, System.IO.File.OpenRead("test.xlsx"));
             Console.WriteLine(manager.GetEntity<Weapon>(10001).ATK);
+            Array.ForEach(typeof(List<int>).GetProperties(), x =>
+            {
+            Console.WriteLine(x.Name);
+            });
+            
         }
     }
 }

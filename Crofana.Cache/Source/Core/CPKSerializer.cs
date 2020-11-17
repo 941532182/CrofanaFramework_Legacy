@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Reflection;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using Crofana.Extension;
 using Crofana.Excel;
@@ -65,11 +66,11 @@ namespace Crofana.Cache
         {
             for (int i = 0; i < fields.Count; i++)
             {
-                fields[i].SetValue(entity, CellToFieldType(row[i], fields[i]));
+                fields[i].SetValue(entity, CellToFieldValue(row[i], fields[i]));
             }
         }
 
-        private object CellToFieldType(Cell cell, FieldInfo field)
+        private object CellToFieldValue(Cell cell, FieldInfo field)
         {
             string text = cell.Text;
             Type type = field.FieldType;
@@ -77,7 +78,7 @@ namespace Crofana.Cache
             {
                 return type.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { text });
             }
-            else if (type.IsSubclassOf(typeof(Enum)))
+            else if (type.IsEnum)
             {
                 return Enum.Parse(type, text, true);
             }
@@ -90,17 +91,143 @@ namespace Crofana.Cache
                 Type genericDef = type.GetGenericTypeDefinition();
                 if (genericDef == typeof(IList<>))
                 {
+                    Type elementType = type.GetGenericArguments()[0];
+                    string[] split = text.Split(',');
+                    Type finalType = typeof(List<>).MakeGenericType(elementType);
+                    object list = finalType.GetConstructor(EMPTY_TYPE_ARRAY).Invoke(null);
+                    MethodInfo addMethod = finalType.GetMethod("Add");
+                    if (elementType.IsPrimitive)
+                    {
+                        foreach (var x in split)
+                        {
+                            addMethod.Invoke(list, new object[] { elementType.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { x }) });
+                        }
+                    }
+                    else if (elementType.IsEnum)
+                    {
+                        foreach (var x in split)
+                        {
+                            addMethod.Invoke(list, new object[] { Enum.Parse(elementType, x, true) });
+                        }
+                    }
+                    else if (elementType == typeof(string))
+                    {
+                        foreach (var x in split)
+                        {
+                            addMethod.Invoke(list, new object[] { x });
+                        }
+                    }
+                    else if (elementType.HasAttributeRecursive<CrofanaEntityAttribute>())
+                    {
 
+                    }
+                    return list;
                 }
                 else if (genericDef == typeof(IDictionary<,>))
                 {
+                    Type[] genericTypes = type.GetGenericArguments();
+                    Type keyType = genericTypes[0];
+                    Type valueType = genericTypes[1];
+                    string[] split = text.Split(',');
+                    Type finalType = typeof(Dictionary<,>).MakeGenericType(keyType, valueType);
+                    object dict = finalType.GetConstructor(EMPTY_TYPE_ARRAY).Invoke(null);
+                    PropertyInfo indexer = finalType.GetProperty("Item");
+                    if (keyType.IsPrimitive)
+                    {
+                        if (valueType.IsPrimitive)
+                        {
+                            foreach (var x in split)
+                            {
+                                string[] splitPair = x.Split(':');
+                                object key = keyType.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { splitPair[0] });
+                                object value = valueType.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { splitPair[1] });
+                                indexer.SetValue(dict, value, new object[] { key });
+                            }
+                        }
+                        else if (valueType.IsEnum)
+                        {
+                            foreach (var x in split)
+                            {
+                                string[] splitPair = x.Split(':');
+                                object key = keyType.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { splitPair[0] });
+                                object value = Enum.Parse(valueType, splitPair[1], true);
+                                indexer.SetValue(dict, value, new object[] { key });
+                            }
+                        }
+                        else if (valueType == typeof(string))
+                        {
+                            foreach (var x in split)
+                            {
+                                string[] splitPair = x.Split(':');
+                                object key = keyType.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { splitPair[0] });
+                                object value = splitPair[1];
+                                indexer.SetValue(dict, value, new object[] { key });
+                            }
+                        }
+                        else if (valueType.HasAttributeRecursive<CrofanaEntityAttribute>())
+                        {
 
+                        }
+                    }
+                    else if (keyType == typeof(string))
+                    {
+                        if (valueType.IsPrimitive)
+                        {
+                            foreach (var x in split)
+                            {
+                                string[] splitPair = x.Split(':');
+                                object key = splitPair[0];
+                                object value = valueType.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { splitPair[1] });
+                                indexer.SetValue(dict, value, new object[] { key });
+                            }
+                        }
+                        else if (valueType.IsEnum)
+                        {
+                            foreach (var x in split)
+                            {
+                                string[] splitPair = x.Split(':');
+                                object key = splitPair[0];
+                                object value = Enum.Parse(valueType, splitPair[1], true);
+                                indexer.SetValue(dict, value, new object[] { key });
+                            }
+                        }
+                        else if (valueType == typeof(string))
+                        {
+                            foreach (var x in split)
+                            {
+                                string[] splitPair = x.Split(':');
+                                object key = splitPair[0];
+                                object value = splitPair[1];
+                                indexer.SetValue(dict, value, new object[] { key });
+                            }
+                        }
+                        else if (valueType.HasAttributeRecursive<CrofanaEntityAttribute>())
+                        {
+
+                        }
+                    }
+                    return dict;
                 }
             }
             else if (type.HasAttributeRecursive<CrofanaEntityAttribute>())
             {
 
             }
+            return null;
+        }
+
+        private object DeserializeIList()
+        {
+            return null;
+        }
+
+        private object DeserializeIDictionary()
+        {
+            return null;
+        }
+
+        private object DeserializeCrofanaEntity()
+        {
             return null;
         }
     }

@@ -16,6 +16,7 @@ namespace Crofana.Cache
         private static Type[] EMPTY_TYPE_ARRAY = { };
 
         private Dictionary<Type, Func<string, object>> customConverterMap = new Dictionary<Type, Func<string, object>>();
+        private ICrofanaEntityManager cachedTarget;
 
         public CPKSerializer()
         {
@@ -37,6 +38,7 @@ namespace Crofana.Cache
 
         public void Deserialize(Stream stream, ICrofanaEntityManager target)
         {
+            cachedTarget = target;
             WorkBook wb = new WorkBook(stream);
             WorkSheet ws1 = wb[0];
             WorkSheet ws2 = wb[1];
@@ -49,18 +51,26 @@ namespace Crofana.Cache
             for (int i = 1; i < ws1.Count; i++)
             {
                 ulong primaryKey = ulong.Parse(ws1[i][0].Text);
-                object entity = target.GetEntity(type, primaryKey);
-                if (entity == null)
-                {
-                    entity = type.GetConstructor(EMPTY_TYPE_ARRAY).Invoke(null);
-                    DeserializeEntity(type, fields, ws1[i], entity);
-                    target.AddEntity(entity);
-                }
-                else
-                {
-                    DeserializeEntity(type, fields, ws1[i], entity);
-                }
+                object entity = GetEntityInternal(type, primaryKey);
+                DeserializeEntity(type, fields, ws1[i], entity);
             }
+            cachedTarget = null;
+        }
+
+        private object GetEntityInternal(Type type, ulong primaryKey)
+        {
+            object entity = cachedTarget.GetEntity(type, primaryKey);
+            if (entity == null)
+            {
+                entity = type.GetConstructor(EMPTY_TYPE_ARRAY).Invoke(null);
+                FieldInfo primaryKeyField = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                                                .Where(x => x.HasAttributeRecursive<PrimaryKeyAttribute>())
+                                                .FirstOrDefault();
+                primaryKeyField.SetValue(entity, primaryKey);
+                cachedTarget.AddEntity(entity);
+                primaryKeyField.SetValue(entity, 0UL);    // used to see whether the entity is uninitialized
+            }
+            return entity;
         }
 
         private void DeserializeEntity(Type type, IList<FieldInfo> fields, Row row, object entity)
@@ -75,157 +85,18 @@ namespace Crofana.Cache
         {
             string text = cell.Text;
             Type type = field.FieldType;
-            if (type.IsPrimitive)
-            {
-                return type.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { text });
-            }
-            else if (type.IsEnum)
-            {
-                return Enum.Parse(type, text, true);
-            }
-            else if (type == typeof(string))
-            {
-                return text;
-            }
-            else if (type.IsGenericType)
-            {
-                Type genericDef = type.GetGenericTypeDefinition();
-                if (genericDef == typeof(IList<>))
-                {
-                    Type elementType = type.GetGenericArguments()[0];
-                    string[] split = text.Split(',');
-                    Type finalType = typeof(List<>).MakeGenericType(elementType);
-                    object list = finalType.GetConstructor(EMPTY_TYPE_ARRAY).Invoke(null);
-                    MethodInfo addMethod = finalType.GetMethod("Add");
-                    if (elementType.IsPrimitive)
-                    {
-                        foreach (var x in split)
-                        {
-                            addMethod.Invoke(list, new object[] { elementType.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { x }) });
-                        }
-                    }
-                    else if (elementType.IsEnum)
-                    {
-                        foreach (var x in split)
-                        {
-                            addMethod.Invoke(list, new object[] { Enum.Parse(elementType, x, true) });
-                        }
-                    }
-                    else if (elementType == typeof(string))
-                    {
-                        foreach (var x in split)
-                        {
-                            addMethod.Invoke(list, new object[] { x });
-                        }
-                    }
-                    else if (elementType.HasAttributeRecursive<CrofanaEntityAttribute>())
-                    {
-
-                    }
-                    return list;
-                }
-                else if (genericDef == typeof(IDictionary<,>))
-                {
-                    Type[] genericTypes = type.GetGenericArguments();
-                    Type keyType = genericTypes[0];
-                    Type valueType = genericTypes[1];
-                    string[] split = text.Split(',');
-                    Type finalType = typeof(Dictionary<,>).MakeGenericType(keyType, valueType);
-                    object dict = finalType.GetConstructor(EMPTY_TYPE_ARRAY).Invoke(null);
-                    PropertyInfo indexer = finalType.GetProperty("Item");
-                    if (keyType.IsPrimitive)
-                    {
-                        if (valueType.IsPrimitive)
-                        {
-                            foreach (var x in split)
-                            {
-                                string[] splitPair = x.Split(':');
-                                object key = keyType.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { splitPair[0] });
-                                object value = valueType.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { splitPair[1] });
-                                indexer.SetValue(dict, value, new object[] { key });
-                            }
-                        }
-                        else if (valueType.IsEnum)
-                        {
-                            foreach (var x in split)
-                            {
-                                string[] splitPair = x.Split(':');
-                                object key = keyType.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { splitPair[0] });
-                                object value = Enum.Parse(valueType, splitPair[1], true);
-                                indexer.SetValue(dict, value, new object[] { key });
-                            }
-                        }
-                        else if (valueType == typeof(string))
-                        {
-                            foreach (var x in split)
-                            {
-                                string[] splitPair = x.Split(':');
-                                object key = keyType.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { splitPair[0] });
-                                object value = splitPair[1];
-                                indexer.SetValue(dict, value, new object[] { key });
-                            }
-                        }
-                        else if (valueType.HasAttributeRecursive<CrofanaEntityAttribute>())
-                        {
-
-                        }
-                    }
-                    else if (keyType == typeof(string))
-                    {
-                        if (valueType.IsPrimitive)
-                        {
-                            foreach (var x in split)
-                            {
-                                string[] splitPair = x.Split(':');
-                                object key = splitPair[0];
-                                object value = valueType.GetMethod("Parse", new Type[] { typeof(string) }).Invoke(null, new object[] { splitPair[1] });
-                                indexer.SetValue(dict, value, new object[] { key });
-                            }
-                        }
-                        else if (valueType.IsEnum)
-                        {
-                            foreach (var x in split)
-                            {
-                                string[] splitPair = x.Split(':');
-                                object key = splitPair[0];
-                                object value = Enum.Parse(valueType, splitPair[1], true);
-                                indexer.SetValue(dict, value, new object[] { key });
-                            }
-                        }
-                        else if (valueType == typeof(string))
-                        {
-                            foreach (var x in split)
-                            {
-                                string[] splitPair = x.Split(':');
-                                object key = splitPair[0];
-                                object value = splitPair[1];
-                                indexer.SetValue(dict, value, new object[] { key });
-                            }
-                        }
-                        else if (valueType.HasAttributeRecursive<CrofanaEntityAttribute>())
-                        {
-
-                        }
-                    }
-                    return dict;
-                }
-            }
-            else if (type.HasAttributeRecursive<CrofanaEntityAttribute>())
-            {
-
-            }
-            return null;
+            return Convert(type, text, true);
         }
 
         private object Convert(Type type, string text, bool convertContainer)
         {
             if (customConverterMap.ContainsKey(type))
             {
-                return customConverterMap[type].Invoke(text);
+                return ConvertCustom(type, text);
             }
             else if (type.IsEnum)
             {
-                return Enum.Parse(type, text, true);
+                return ConvertEnum(type, text);
             }
             else if (type.HasAttributeRecursive<CrofanaEntityAttribute>())
             {
@@ -235,21 +106,26 @@ namespace Crofana.Cache
             {
                 if (type.IsArray)
                 {
-
+                    return ConvertArray(type.GetElementType(), text);
                 }
                 if (type.IsGenericType)
                 {
                     if (type.GetGenericTypeDefinition() == typeof(IList<>))
                     {
-
+                        return ConvertIList(type, text);
                     }
                     else if (type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                     {
-
+                        return ConvertIDictionary(type, text);
                     }
                 }
             }
             return null;
+        }
+
+        private object ConvertCustom(Type type, string text)
+        {
+            return customConverterMap[type].Invoke(text);
         }
 
         private object ConvertEnum(Type type, string text)
@@ -257,54 +133,49 @@ namespace Crofana.Cache
             return Enum.Parse(type, text, true);
         }
 
-        private object ConvertArray(Type elementType, string text)
+        private object ConvertArray(Type type, string text)
         {
-            return null;
+            Type elementType = type.GetElementType();
+            string[] split = text.Split(',');
+            Array arr = Array.CreateInstance(elementType, split.Length);
+            int index = 0;
+            Array.ForEach(split, element => arr.SetValue(Convert(elementType, element, false), index++));
+            return arr;
         }
 
-        private object ConvertIList(Type elementType, string text)
+        private object ConvertIList(Type type, string text)
         {
-            return null;
+            Type elementType = type.GetGenericArguments()[0];
             string[] split = text.Split(',');
             Type finalType = typeof(List<>).MakeGenericType(elementType);
             object list = finalType.GetConstructor(EMPTY_TYPE_ARRAY).Invoke(null);
             MethodInfo addMethod = finalType.GetMethod("Add");
-            if (customConverterMap.ContainsKey(elementType))
-            {
-                foreach (var element in split)
-                {
-                    addMethod.Invoke(list, new object[] { customConverterMap[elementType].Invoke(element) });
-                }
-            }
-            else if (elementType.IsEnum)
-            {
-                foreach (var element in split)
-                {
-                    addMethod.Invoke(list, new object[] { Enum.Parse(elementType, element, true) });
-                }
-            }
-            else if (elementType == typeof(string))
-            {
-                foreach (var x in split)
-                {
-                    addMethod.Invoke(list, new object[] { x });
-                }
-            }
-            else if (elementType.HasAttributeRecursive<CrofanaEntityAttribute>())
-            {
-
-            }
+            Array.ForEach(split, element => addMethod.Invoke(list, new object[] { Convert(elementType, element, false) }));
             return list;
         }
 
-        private object ConvertIDictionary(Type keyType, Type valueType, string text)
+        private object ConvertIDictionary(Type type, string text)
         {
-            return null;
+            Type[] genericTypes = type.GetGenericArguments();
+            Type keyType = genericTypes[0];
+            Type valueType = genericTypes[1];
+            string[] split = text.Split(',');
+            Type finalType = typeof(Dictionary<,>).MakeGenericType(keyType, valueType);
+            object dict = finalType.GetConstructor(EMPTY_TYPE_ARRAY).Invoke(null);
+            PropertyInfo indexer = finalType.GetProperty("Item");
+            Array.ForEach(split, element =>
+            {
+                string[] splitElement = element.Split(':');
+                object key = ConvertCustom(keyType, splitElement[0]);
+                object value = Convert(valueType, splitElement[1], false);
+                indexer.SetValue(dict, value, new object[] { key });
+            });
+            return dict;
         }
 
         private object ConvertCrofanaEntity(Type type, string text)
         {
-            return null;
+            return GetEntityInternal(type, ulong.Parse(text));
         }
 
     }

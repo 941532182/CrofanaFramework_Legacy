@@ -35,10 +35,10 @@ namespace Crofana.IoC
         #region ICrofanaObjectFactory Interface
         public object GetObject(Type type)
         {
-            if (!type.HasAttributeRecursive<CrofanaObjectAttribute>())
+            /*if (!type.HasAttributeRecursive<CrofanaObjectAttribute>())
             {
                 return null;
-            }
+            }*/
             ScopeAttribute scope = type.GetAttributeRecursive<ScopeAttribute>();
             if (scope == null || scope.Scope == Scope.Singleton)
             {
@@ -110,7 +110,7 @@ namespace Crofana.IoC
                    if (x.MemberType == MemberTypes.Field)
                    {
                        FieldInfo field = x as FieldInfo;
-                       if (field != null && field.FieldType.HasAttributeRecursive<CrofanaObjectAttribute>())
+                       if (field != null /*&& field.FieldType.HasAttributeRecursive<CrofanaObjectAttribute>()*/)
                        {
                            field.SetValue(obj, GetObject(field.FieldType));
                        }
@@ -122,7 +122,7 @@ namespace Crofana.IoC
                        {
                            throw new SetterNotFoundException(prop);
                        }
-                       if (prop != null && prop.PropertyType.HasAttributeRecursive<CrofanaObjectAttribute>())
+                       if (prop != null /*&& prop.PropertyType.HasAttributeRecursive<CrofanaObjectAttribute>()*/)
                        {
                            prop.SetValue(obj, GetObject(prop.PropertyType));
                        }

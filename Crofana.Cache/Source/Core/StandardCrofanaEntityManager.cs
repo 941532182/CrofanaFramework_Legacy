@@ -51,12 +51,12 @@ namespace Crofana.Cache
             if (!entityMap.ContainsKey(type))
             {
                 entityMap[type] = new Dictionary<ulong, object>();
-                FieldInfo field = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                                      .Where(x => x.HasAttributeRecursive<PrimaryKeyAttribute>())
-                                      .FirstOrDefault();
-                if (field != null)
+                FieldInfo primaryKeyField = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                                                .Where(x => x.HasAttributeRecursive<PrimaryKeyAttribute>())
+                                                .FirstOrDefault();
+                if (primaryKeyField != null)
                 {
-                    cachedPKMemberMap[type] = field;
+                    cachedPKMemberMap[type] = primaryKeyField;
                 }
                 else
                 {

@@ -4,10 +4,10 @@ namespace Crofana.Cache
 {
     public interface ICrofanaEntityManager
     {
-        object GetEntity(Type type, long primaryKey);
-        T GetEntity<T>(long primaryKey) where T : class;
+        object GetEntity(Type type, ulong primaryKey);
+        T GetEntity<T>(ulong primaryKey) where T : class;
         void AddEntity(object obj);
-        bool RemoveEntity(Type type, long primaryKey);
-        bool RemoveEntity<T>(long primaryKey) where T : class;
+        bool RemoveEntity(Type type, ulong primaryKey);
+        bool RemoveEntity<T>(ulong primaryKey) where T : class;
     }
 }

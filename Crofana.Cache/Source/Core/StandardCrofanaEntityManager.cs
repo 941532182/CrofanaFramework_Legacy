@@ -15,7 +15,7 @@ namespace Crofana.Cache
         #endregion
 
         #region Fields
-        private Dictionary<Type, Dictionary<long, object>> entityMap = new Dictionary<Type, Dictionary<long, object>>();
+        private Dictionary<Type, Dictionary<ulong, object>> entityMap = new Dictionary<Type, Dictionary<ulong, object>>();
         private Dictionary<Type, MemberInfo> cachedPKMemberMap = new Dictionary<Type, MemberInfo>();
         #endregion
 
@@ -27,7 +27,7 @@ namespace Crofana.Cache
         #endregion
 
         #region ICrofanaEntityManager Interface
-        public object GetEntity(Type type, long primaryKey)
+        public object GetEntity(Type type, ulong primaryKey)
         {
             if (entityMap.ContainsKey(type))
             {
@@ -40,7 +40,7 @@ namespace Crofana.Cache
             return null;
         }
 
-        public T GetEntity<T>(long primaryKey) where T : class
+        public T GetEntity<T>(ulong primaryKey) where T : class
         {
             return GetEntity(typeof(T), primaryKey) as T;
         }
@@ -50,7 +50,7 @@ namespace Crofana.Cache
             Type type = obj.GetType();
             if (!entityMap.ContainsKey(type))
             {
-                entityMap[type] = new Dictionary<long, object>();
+                entityMap[type] = new Dictionary<ulong, object>();
                 FieldInfo field = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                                       .Where(x => x.HasAttributeRecursive<PrimaryKeyAttribute>())
                                       .FirstOrDefault();
@@ -74,18 +74,18 @@ namespace Crofana.Cache
             if (cachedPKMember.MemberType == MemberTypes.Field)
             {
                 FieldInfo field = cachedPKMember as FieldInfo;
-                long pk = (long) field.GetValue(obj);
+                ulong pk = (ulong) field.GetValue(obj);
                 entityMap[type][pk] = obj;
             }
             else
             {
                 PropertyInfo prop = cachedPKMember as PropertyInfo;
-                long pk = (long)prop.GetValue(obj);
+                ulong pk = (ulong) prop.GetValue(obj);
                 entityMap[type][pk] = obj;
             }
         }
 
-        public bool RemoveEntity(Type type, long primaryKey)
+        public bool RemoveEntity(Type type, ulong primaryKey)
         {
             if (entityMap.ContainsKey(type))
             {
@@ -99,7 +99,7 @@ namespace Crofana.Cache
             return false;
         }
 
-        public bool RemoveEntity<T>(long primaryKey) where T : class
+        public bool RemoveEntity<T>(ulong primaryKey) where T : class
         {
             return RemoveEntity(typeof(T), primaryKey);
         }

@@ -54,11 +54,21 @@ namespace CrofanaTestClient
         public class Weapon
         {
             [PrimaryKey]
-            public long Id;
+            public ulong Id;
             public string Name;
             public int ATK;
             public IList<int> TestList;
             public IDictionary<string, int> TestDict;
+        }
+
+        [CrofanaEntity]
+        public class Test
+        {
+            [PrimaryKey]
+            public ulong Id;
+            public string Name;
+            public IList<int> List;
+            public IDictionary<string, int> Dict;
         }
 
         static void Main(string[] args)
@@ -66,12 +76,6 @@ namespace CrofanaTestClient
             var manager = new StandardCrofanaEntityManager();
             var serializer = new CPKSerializer();
             manager.Deserialize(serializer, System.IO.File.OpenRead("test.xlsx"));
-            Console.WriteLine(manager.GetEntity<Weapon>(10001).ATK);
-            Array.ForEach(typeof(List<int>).GetProperties(), x =>
-            {
-            Console.WriteLine(x.Name);
-            });
-            
         }
     }
 }

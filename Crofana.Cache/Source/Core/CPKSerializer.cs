@@ -15,23 +15,24 @@ namespace Crofana.Cache
     {
         private static Type[] EMPTY_TYPE_ARRAY = { };
 
-        private Dictionary<Type, Func<string, object>> converters = new Dictionary<Type, Func<string, object>>();
+        private Dictionary<Type, Func<string, object>> customConverterMap = new Dictionary<Type, Func<string, object>>();
 
         public CPKSerializer()
         {
-            converters[typeof(bool)] = x => bool.Parse(x);
-            converters[typeof(byte)] = x => byte.Parse(x);
-            converters[typeof(sbyte)] = x => sbyte.Parse(x);
-            converters[typeof(ushort)] = x => ushort.Parse(x);
-            converters[typeof(short)] = x => short.Parse(x);
-            converters[typeof(uint)] = x => uint.Parse(x);
-            converters[typeof(int)] = x => int.Parse(x);
-            converters[typeof(ulong)] = x => ulong.Parse(x);
-            converters[typeof(long)] = x => long.Parse(x);
-            converters[typeof(float)] = x => float.Parse(x);
-            converters[typeof(double)] = x => double.Parse(x);
-            converters[typeof(decimal)] = x => decimal.Parse(x);
-            converters[typeof(char)] = x => char.Parse(x);
+            customConverterMap[typeof(bool)] = x => bool.Parse(x);
+            customConverterMap[typeof(byte)] = x => byte.Parse(x);
+            customConverterMap[typeof(sbyte)] = x => sbyte.Parse(x);
+            customConverterMap[typeof(ushort)] = x => ushort.Parse(x);
+            customConverterMap[typeof(short)] = x => short.Parse(x);
+            customConverterMap[typeof(uint)] = x => uint.Parse(x);
+            customConverterMap[typeof(int)] = x => int.Parse(x);
+            customConverterMap[typeof(ulong)] = x => ulong.Parse(x);
+            customConverterMap[typeof(long)] = x => long.Parse(x);
+            customConverterMap[typeof(float)] = x => float.Parse(x);
+            customConverterMap[typeof(double)] = x => double.Parse(x);
+            customConverterMap[typeof(decimal)] = x => decimal.Parse(x);
+            customConverterMap[typeof(char)] = x => char.Parse(x);
+            customConverterMap[typeof(string)] = x => x;
         }
 
         public void Deserialize(Stream stream, ICrofanaEntityManager target)
@@ -44,10 +45,10 @@ namespace Crofana.Cache
             Type type = asms.Select(x => x.GetType(typeName))
                             .Where(x => x != null)
                             .FirstOrDefault();
-            IList<FieldInfo> fields = ws1[1].Select(x => type.GetField(x.Text)).ToList();
-            for (int i = 2; i < ws1.Count; i++)
+            IList<FieldInfo> fields = ws1[0].Select(x => type.GetField(x.Text)).ToList();
+            for (int i = 1; i < ws1.Count; i++)
             {
-                long primaryKey = long.Parse(ws1[i][0].Text);
+                ulong primaryKey = ulong.Parse(ws1[i][0].Text);
                 object entity = target.GetEntity(type, primaryKey);
                 if (entity == null)
                 {
@@ -216,19 +217,95 @@ namespace Crofana.Cache
             return null;
         }
 
-        private object DeserializeIList()
+        private object Convert(Type type, string text, bool convertContainer)
+        {
+            if (customConverterMap.ContainsKey(type))
+            {
+                return customConverterMap[type].Invoke(text);
+            }
+            else if (type.IsEnum)
+            {
+                return Enum.Parse(type, text, true);
+            }
+            else if (type.HasAttributeRecursive<CrofanaEntityAttribute>())
+            {
+                return ConvertCrofanaEntity(type, text);
+            }
+            else if (convertContainer)
+            {
+                if (type.IsArray)
+                {
+
+                }
+                if (type.IsGenericType)
+                {
+                    if (type.GetGenericTypeDefinition() == typeof(IList<>))
+                    {
+
+                    }
+                    else if (type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                    {
+
+                    }
+                }
+            }
+            return null;
+        }
+
+        private object ConvertEnum(Type type, string text)
+        {
+            return Enum.Parse(type, text, true);
+        }
+
+        private object ConvertArray(Type elementType, string text)
         {
             return null;
         }
 
-        private object DeserializeIDictionary()
+        private object ConvertIList(Type elementType, string text)
+        {
+            return null;
+            string[] split = text.Split(',');
+            Type finalType = typeof(List<>).MakeGenericType(elementType);
+            object list = finalType.GetConstructor(EMPTY_TYPE_ARRAY).Invoke(null);
+            MethodInfo addMethod = finalType.GetMethod("Add");
+            if (customConverterMap.ContainsKey(elementType))
+            {
+                foreach (var element in split)
+                {
+                    addMethod.Invoke(list, new object[] { customConverterMap[elementType].Invoke(element) });
+                }
+            }
+            else if (elementType.IsEnum)
+            {
+                foreach (var element in split)
+                {
+                    addMethod.Invoke(list, new object[] { Enum.Parse(elementType, element, true) });
+                }
+            }
+            else if (elementType == typeof(string))
+            {
+                foreach (var x in split)
+                {
+                    addMethod.Invoke(list, new object[] { x });
+                }
+            }
+            else if (elementType.HasAttributeRecursive<CrofanaEntityAttribute>())
+            {
+
+            }
+            return list;
+        }
+
+        private object ConvertIDictionary(Type keyType, Type valueType, string text)
         {
             return null;
         }
 
-        private object DeserializeCrofanaEntity()
+        private object ConvertCrofanaEntity(Type type, string text)
         {
             return null;
         }
+
     }
 }

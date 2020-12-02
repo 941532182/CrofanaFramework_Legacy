@@ -14,5 +14,10 @@ namespace Crofana.IoC
         public abstract object GetObject(Type type);
 
         public abstract void ProcessDependencyInjection(object crofanaObject);
+
+        public T GetObject<T>() where T : class
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -13,7 +13,7 @@ namespace Crofana.Cache
 {
     public class CPKSerializer : ICrofanaEntitySerializer
     {
-        private static Type[] EMPTY_TYPE_ARRAY = { };
+        private static readonly Type[] EMPTY_TYPE_ARRAY = { };
 
         private Dictionary<Type, Func<string, object>> customConverterMap = new Dictionary<Type, Func<string, object>>();
         private ICrofanaEntityManager cachedTarget;
@@ -48,11 +48,13 @@ namespace Crofana.Cache
                             .Where(x => x != null)
                             .FirstOrDefault();
             IList<FieldInfo> fields = ws1[0].Select(x => type.GetField(x.Text)).ToList();
+            IList<PropertyInfo> props = ws1[0].Select(x => type.GetProperty(x.Text)).ToList();
             for (int i = 1; i < ws1.Count; i++)
             {
                 ulong primaryKey = ulong.Parse(ws1[i][0].Text);
                 object entity = GetEntityInternal(type, primaryKey);
                 DeserializeEntity(type, fields, ws1[i], entity);
+                DeserializeEntity(type, props, ws1[i], entity);
             }
             cachedTarget = null;
         }
@@ -66,9 +68,28 @@ namespace Crofana.Cache
                 FieldInfo primaryKeyField = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                                                 .Where(x => x.HasAttributeRecursive<PrimaryKeyAttribute>())
                                                 .FirstOrDefault();
-                primaryKeyField.SetValue(entity, primaryKey);
-                cachedTarget.AddEntity(entity);
-                primaryKeyField.SetValue(entity, 0UL);    // used to see whether the entity is uninitialized
+                if (primaryKeyField != null)
+                {
+                    primaryKeyField.SetValue(entity, primaryKey);
+                    cachedTarget.AddEntity(entity);
+                    primaryKeyField.SetValue(entity, 0UL);    // used to see whether the entity is uninitialized
+                }
+                else
+                {
+                    PropertyInfo primaryKeyProp = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                                                      .Where(x => x.HasAttributeRecursive<PrimaryKeyAttribute>())
+                                                      .FirstOrDefault();
+                    if (primaryKeyProp != null)
+                    {
+                        primaryKeyProp.SetValue(entity, primaryKey);
+                        cachedTarget.AddEntity(entity);
+                        primaryKeyProp.SetValue(entity, 0UL);    // used to see whether the entity is uninitialized
+                    }
+                    else
+                    {
+                        throw new IllegalCrofanaEntityException(type, IllegalCrofanaEntityException.IllegalReason.NoPrimaryKey);
+                    }
+                }
             }
             return entity;
         }
@@ -77,7 +98,15 @@ namespace Crofana.Cache
         {
             for (int i = 0; i < fields.Count; i++)
             {
-                fields[i].SetValue(entity, CellToFieldValue(row[i], fields[i]));
+                fields[i]?.SetValue(entity, CellToFieldValue(row[i], fields[i]));
+            }
+        }
+
+        private void DeserializeEntity(Type type, IList<PropertyInfo> props, Row row, object entity)
+        {
+            for (int i = 0; i < props.Count; i++)
+            {
+                props[i]?.SetValue(entity, CellToPropValue(row[i], props[i]));
             }
         }
 
@@ -85,6 +114,13 @@ namespace Crofana.Cache
         {
             string text = cell.Text;
             Type type = field.FieldType;
+            return Convert(type, text, true);
+        }
+
+        private object CellToPropValue(Cell cell, PropertyInfo prop)
+        {
+            string text = cell.Text;
+            Type type = prop.PropertyType;
             return Convert(type, text, true);
         }
 

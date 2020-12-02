@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace Crofana.Cache
 {
@@ -9,5 +10,6 @@ namespace Crofana.Cache
         void AddEntity(object obj);
         bool RemoveEntity(Type type, ulong primaryKey);
         bool RemoveEntity<T>(ulong primaryKey) where T : class;
+        void Deserialize(ICrofanaEntitySerializer serializer, Stream stream);
     }
 }

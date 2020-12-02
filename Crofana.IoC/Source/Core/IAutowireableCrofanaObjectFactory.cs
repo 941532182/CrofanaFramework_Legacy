@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Crofana.IoC
 {
-    interface IAutowireableCrofanaObjectFactory : ICrofanaObjectFactory
+    public interface IAutowireableCrofanaObjectFactory : ICrofanaObjectFactory
     {
         void ProcessDependencyInjection(object crofanaObject);
     }

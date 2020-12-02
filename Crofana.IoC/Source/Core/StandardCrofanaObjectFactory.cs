@@ -10,11 +10,11 @@ namespace Crofana.IoC
     /// <summary>
     /// 标准IoC容器实现，支持依赖注入、生命周期回调、配置作用域
     /// </summary>
-    public class StandardCrofanaObjectFactory : ICrofanaObjectFactory
+    public class StandardCrofanaObjectFactory : ICrofanaObjectFactory, IAutowireableCrofanaObjectFactory
     {
 
         #region Statics
-        private static Type[] EMPTY_TYPE_ARRAY = { };
+        private static readonly Type[] EMPTY_TYPE_ARRAY = { };
         #endregion
 
         #region Fields
@@ -50,53 +50,12 @@ namespace Crofana.IoC
             }
             return NewObject(type);
         }
-        #endregion
 
-        #region Public Methods
         public T GetObject<T>() where T : class => GetObject(typeof(T)) as T;
         #endregion
 
-        #region Private Methods
-        private void ScanListeners()
-        {
-            AppDomain.CurrentDomain
-                     .GetAssemblies()
-                     .ToList()
-                     .ForEach(asm =>
-                     {
-                         asm.GetTypes()
-                            .ToList()
-                            .ForEach(type => TryCacheCallbacks(type));
-                     });
-        }
-
-        private object NewObject(Type type)
-        {
-            object obj;
-            ProcessConstruction(type, out obj);
-            if (obj != null)
-            {
-                TryRegisterObjectMap(obj);
-                ProcessDependencyInjection(obj);
-            }
-            return obj;
-        }
-
-        private void ProcessConstruction(Type type, out object obj)
-        {
-            BroadcastPreConstruct();
-
-            ConstructorInfo ctor = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, EMPTY_TYPE_ARRAY, null);
-            if (ctor == null)
-            {
-                throw new ConstructorNotFoundException(type);
-            }
-            obj = ctor.Invoke(null);
-
-            BroadcastPostConstruct(obj);
-        }
-
-        private void ProcessDependencyInjection(object obj)
+        #region IWutowireableCrofanaObjectFactory Interface
+        public void ProcessDependencyInjection(object obj)
         {
             BroadcastPreInject(obj);
 
@@ -130,6 +89,51 @@ namespace Crofana.IoC
                });
 
             BroadcastPostInject(obj);
+        }
+        #endregion
+
+        #region Public Methods
+        
+        #endregion
+
+        #region Private Methods
+        private void ScanListeners()
+        {
+            /*AppDomain.CurrentDomain
+                     .GetAssemblies()
+                     .ToList()
+                     .ForEach(asm =>
+                     {
+                         asm.GetTypes()
+                            .ToList()
+                            .ForEach(type => TryCacheCallbacks(type));
+                     });*/
+        }
+
+        private object NewObject(Type type)
+        {
+            object obj;
+            ProcessConstruction(type, out obj);
+            if (obj != null)
+            {
+                TryRegisterObjectMap(obj);
+                ProcessDependencyInjection(obj);
+            }
+            return obj;
+        }
+
+        private void ProcessConstruction(Type type, out object obj)
+        {
+            BroadcastPreConstruct();
+
+            ConstructorInfo ctor = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, EMPTY_TYPE_ARRAY, null);
+            if (ctor == null)
+            {
+                throw new ConstructorNotFoundException(type);
+            }
+            obj = ctor.Invoke(null);
+
+            BroadcastPostConstruct(obj);
         }
 
         private void TryRegisterObjectMap(object obj)

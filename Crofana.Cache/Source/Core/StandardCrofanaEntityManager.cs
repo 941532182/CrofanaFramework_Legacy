@@ -61,13 +61,16 @@ namespace Crofana.Cache
                 else
                 {
                     PropertyInfo prop = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                        .Where(x => x.HasAttributeRecursive<PrimaryKeyAttribute>())
-                        .FirstOrDefault();
+                                            .Where(x => x.HasAttributeRecursive<PrimaryKeyAttribute>())
+                                            .FirstOrDefault();
                     if (prop != null)
                     {
                         cachedPKMemberMap[type] = prop;
                     }
-                    throw new IllegalCrofanaEntityException(type, IllegalCrofanaEntityException.IllegalReason.NoPrimaryKey);
+                    else
+                    {
+                        throw new IllegalCrofanaEntityException(type, IllegalCrofanaEntityException.IllegalReason.NoPrimaryKey);
+                    }
                 }
             }
             MemberInfo cachedPKMember = cachedPKMemberMap[type];
@@ -103,13 +106,14 @@ namespace Crofana.Cache
         {
             return RemoveEntity(typeof(T), primaryKey);
         }
-        #endregion
 
-        #region Public Methods
         public void Deserialize(ICrofanaEntitySerializer serializer, Stream stream)
         {
             serializer.Deserialize(stream, this);
         }
+        #endregion
+
+        #region Public Methods
 
         public void NewEntity()
         {

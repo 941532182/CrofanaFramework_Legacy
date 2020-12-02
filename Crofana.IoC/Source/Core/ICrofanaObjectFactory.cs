@@ -7,5 +7,6 @@ namespace Crofana.IoC
     public interface ICrofanaObjectFactory
     {
         object GetObject(Type type);
+        T GetObject<T>() where T : class;
     }
 }

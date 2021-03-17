@@ -3,6 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
+    <AssemblyName>Crofana.CmtpCompiler</AssemblyName>
+    <RootNamespace>Crofana.CmtpCompiler</RootNamespace>
   </PropertyGroup>
 
 </Project>

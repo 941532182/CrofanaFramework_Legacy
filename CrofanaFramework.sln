@@ -15,7 +15,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crofana.Excel", "Crofana.Ex
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crofana.Network", "Crofana.Network\Crofana.Network.csproj", "{7F81775E-82C0-4D36-A925-ADBDD1BF91E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crofana.Network.CmtpCompiler", "Crofana.Network.CmtpCompiler\Crofana.Network.CmtpCompiler.csproj", "{DAB23CDA-75C8-475C-918C-4EA1721D8607}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crofana.CmtpCompiler", "Crofana.Network.CmtpCompiler\Crofana.CmtpCompiler.csproj", "{DAB23CDA-75C8-475C-918C-4EA1721D8607}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8A156FDB-8739-4318-BF48-720873C1C1C1}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -29,6 +29,7 @@ namespace Crofana.Cache
         #region ICrofanaEntityManager Interface
         public object GetEntity(Type type, ulong primaryKey)
         {
+            if (primaryKey == 0) return null;
             if (entityMap.ContainsKey(type))
             {
                 var typedEntityMap = entityMap[type];
@@ -78,12 +79,20 @@ namespace Crofana.Cache
             {
                 FieldInfo field = cachedPKMember as FieldInfo;
                 ulong pk = (ulong) field.GetValue(obj);
+                if (pk == 0)
+                {
+                    throw new ZeroPrimaryKeyException();
+                }
                 entityMap[type][pk] = obj;
             }
             else
             {
                 PropertyInfo prop = cachedPKMember as PropertyInfo;
                 ulong pk = (ulong) prop.GetValue(obj);
+                if (pk == 0)
+                {
+                    throw new ZeroPrimaryKeyException();
+                }
                 entityMap[type][pk] = obj;
             }
         }
@@ -115,9 +124,29 @@ namespace Crofana.Cache
 
         #region Public Methods
 
+        [Obsolete]
         public void NewEntity()
         {
 
+        }
+
+        public IEnumerable<object> GetEntities(Type type)
+        {
+            if (entityMap.ContainsKey(type))
+            {
+                return entityMap[type].Values;
+            }
+            return Enumerable.Empty<object>();
+        }
+
+        public IEnumerable<T> GetEntities<T>() where T : class
+        {
+            Type type = typeof(T);
+            if (entityMap.ContainsKey(type))
+            {
+                return entityMap[type].Values.Cast<T>();
+            }
+            return Enumerable.Empty<T>();
         }
         #endregion
 

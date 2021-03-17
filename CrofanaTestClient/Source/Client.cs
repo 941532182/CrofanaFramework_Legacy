@@ -46,8 +46,10 @@ namespace CrofanaTestClient
 
         static void Main(string[] args)
         {
-            string[] x = { "x", "y", "z" };
-            x.Select(e => typeof(A).GetField(e)).ToList().ForEach(e => Console.WriteLine(e == null));
+            Crofana.Network.NetworkManager manager = new();
+            Console.ReadLine();
+            //string[] x = { "x", "y", "z" };
+            //x.Select(e => typeof(A).GetField(e)).ToList().ForEach(e => Console.WriteLine(e == null));
             /*var factory = new StandardCrofanaObjectFactory();
             var manager = factory.GetObject<StandardCrofanaEntityManager>();
             var serializer = factory.GetObject<CPKSerializer>();

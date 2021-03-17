@@ -126,13 +126,21 @@ namespace Crofana.Cache
 
         private object Convert(Type type, string text, bool convertContainer)
         {
-            if (customConverterMap.ContainsKey(type))
+            if (text.Length == 0)
+            {
+                return Activator.CreateInstance(type);
+            }
+            else if (customConverterMap.ContainsKey(type))
             {
                 return ConvertCustom(type, text);
             }
             else if (type.IsEnum)
             {
                 return ConvertEnum(type, text);
+            }
+            else if (type.IsValueType || type.HasAttributeRecursive<CrofanaValueObject>())
+            {
+                return ConvertValueObject(type, text);
             }
             else if (type.HasAttributeRecursive<CrofanaEntityAttribute>())
             {
@@ -142,7 +150,7 @@ namespace Crofana.Cache
             {
                 if (type.IsArray)
                 {
-                    return ConvertArray(type.GetElementType(), text);
+                    return ConvertArray(type, text);
                 }
                 if (type.IsGenericType)
                 {
@@ -169,8 +177,46 @@ namespace Crofana.Cache
             return Enum.Parse(type, text, true);
         }
 
+        private object ConvertValueObject(Type type, string text)
+        {
+            string regex = "^\\{.*\\}$";
+            if (!Regex.IsMatch(text, regex))
+            {
+                throw new FormatNotMatchException(text, regex);
+            }
+
+            text = text.Substring(1, text.Length - 2);
+            object valueObject = Activator.CreateInstance(type);
+            if (valueObject == null) return null;
+
+            string[] split = text.Split('|');
+            Array.ForEach(split, element =>
+            {
+                string[] splitElement = element.Split('=');
+                FieldInfo field = type.GetField(splitElement[0]);
+                if (field == null) return;
+                object value = Convert(field.FieldType, splitElement[1], false);
+                field.SetValue(valueObject, value);
+            });
+
+            return valueObject;
+        }
+
+        private object ConvertCrofanaEntity(Type type, string text)
+        {
+            if (text == null || text.Length == 0) return null;
+            return GetEntityInternal(type, ulong.Parse(text));
+        }
+
         private object ConvertArray(Type type, string text)
         {
+            string regex = "^\\[.*\\]$";
+            if (!Regex.IsMatch(text, regex))
+            {
+                throw new FormatNotMatchException(text, regex);
+            }
+
+            text = text.Substring(1, text.Length - 2);
             Type elementType = type.GetElementType();
             string[] split = text.Split(',');
             Array arr = Array.CreateInstance(elementType, split.Length);
@@ -181,6 +227,13 @@ namespace Crofana.Cache
 
         private object ConvertIList(Type type, string text)
         {
+            string regex = "^\\[.*\\]$";
+            if (!Regex.IsMatch(text, regex))
+            {
+                throw new FormatNotMatchException(text, regex);
+            }
+
+            text = text.Substring(1, text.Length - 2);
             Type elementType = type.GetGenericArguments()[0];
             string[] split = text.Split(',');
             Type finalType = typeof(List<>).MakeGenericType(elementType);
@@ -192,6 +245,13 @@ namespace Crofana.Cache
 
         private object ConvertIDictionary(Type type, string text)
         {
+            string regex = "^\\{.*\\}$";
+            if (!Regex.IsMatch(text, regex))
+            {
+                throw new FormatNotMatchException(text, regex);
+            }
+
+            text = text.Substring(1, text.Length - 2);
             Type[] genericTypes = type.GetGenericArguments();
             Type keyType = genericTypes[0];
             Type valueType = genericTypes[1];
@@ -207,11 +267,6 @@ namespace Crofana.Cache
                 indexer.SetValue(dict, value, new object[] { key });
             });
             return dict;
-        }
-
-        private object ConvertCrofanaEntity(Type type, string text)
-        {
-            return GetEntityInternal(type, ulong.Parse(text));
         }
 
     }

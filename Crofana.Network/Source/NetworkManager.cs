@@ -40,11 +40,11 @@ namespace Crofana.Network
                     ControllerAttribute attr = type.GetCustomAttribute<ControllerAttribute>();
                     PropertyInfo parserProp = type.GetProperty("Parser", BindingFlags.Public | BindingFlags.Static);
                     object value = parserProp?.GetValue(null);
-                    if (isController && attr != null)
+                    if (isController && attr is not null)
                     {
                         m_controllerMap[attr.OpCode] = Activator.CreateInstance(type) as IController;
                     }
-                    if (isMessage && value != null && value.GetType().IsSubclassOf(typeof(MessageParser)))
+                    if (isMessage && value is not null && value.GetType().IsSubclassOf(typeof(MessageParser)))
                     {
                         m_parserMap[type] = parserProp.GetValue(null) as MessageParser;
                     }

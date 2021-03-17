@@ -115,7 +115,7 @@ namespace Crofana.Network.Core
         #region Accept
         private void StartAccept(SocketAsyncEventArgs e)
         {
-            if (e == null)
+            if (e is null)
             {
                 e = new();
                 e.Completed += HandleAcceptCompleted;
@@ -182,7 +182,7 @@ namespace Crofana.Network.Core
             {
                 SocketHandle handle = (SocketHandle)e.UserToken;
                 Socket sock = GetSocket(handle);
-                if (sock == null)
+                if (sock is null)
                 {
                     throw new ApplicationException("Socket is null.");
                 }
@@ -212,7 +212,7 @@ namespace Crofana.Network.Core
                     try
                     {
                         Stop();
-                        if (m_serverSocket != null)
+                        if (m_serverSocket is not null)
                         {
                             m_serverSocket = null;
                         }
@@ -417,7 +417,7 @@ namespace Crofana.Network.Core
             }
             public void Push(SocketAsyncEventArgs item)
             {
-                if (item == null)
+                if (item is null)
                 {
                     return;
                 }

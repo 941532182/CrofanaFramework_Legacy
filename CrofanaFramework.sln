@@ -13,14 +13,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CrofanaTestClient", "Crofan
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crofana.Excel", "Crofana.Excel\Crofana.Excel.csproj", "{A85C298A-660C-4B17-A1F0-E1BC47D95029}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crofana.Network", "Crofana.Network\Crofana.Network.csproj", "{7F81775E-82C0-4D36-A925-ADBDD1BF91E5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crofana.Network", "Crofana.Network\Crofana.Network.csproj", "{7F81775E-82C0-4D36-A925-ADBDD1BF91E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crofana.CmtpCompiler", "Crofana.Network.CmtpCompiler\Crofana.CmtpCompiler.csproj", "{DAB23CDA-75C8-475C-918C-4EA1721D8607}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crofana.CmtpCompiler", "Crofana.CmtpCompiler\Crofana.CmtpCompiler.csproj", "{DAB23CDA-75C8-475C-918C-4EA1721D8607}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8A156FDB-8739-4318-BF48-720873C1C1C1}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrofanaTestClient2", "CrofanaTestClient2\CrofanaTestClient2.csproj", "{9E0A6501-FCC9-441F-8EDD-7BA47DF82C91}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -56,6 +58,10 @@ Global
 		{DAB23CDA-75C8-475C-918C-4EA1721D8607}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DAB23CDA-75C8-475C-918C-4EA1721D8607}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DAB23CDA-75C8-475C-918C-4EA1721D8607}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E0A6501-FCC9-441F-8EDD-7BA47DF82C91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E0A6501-FCC9-441F-8EDD-7BA47DF82C91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E0A6501-FCC9-441F-8EDD-7BA47DF82C91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E0A6501-FCC9-441F-8EDD-7BA47DF82C91}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

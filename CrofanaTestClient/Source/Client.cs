@@ -47,6 +47,7 @@ namespace CrofanaTestClient
         static void Main(string[] args)
         {
             Crofana.Network.NetworkManager manager = new();
+            manager.Start();
             Console.ReadLine();
             //string[] x = { "x", "y", "z" };
             //x.Select(e => typeof(A).GetField(e)).ToList().ForEach(e => Console.WriteLine(e == null));

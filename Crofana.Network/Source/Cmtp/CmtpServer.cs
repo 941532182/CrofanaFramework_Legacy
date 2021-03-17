@@ -59,7 +59,7 @@ namespace Crofana.Network.Cmtp
             //Socket sock = m_server.GetSocket(handle);
             //Console.WriteLine($"Received message, client: {sock.RemoteEndPoint}, message: {info}, length: {data.Length}");
             Session session = m_socketHandle2Session.ContainsKey(handle) ? m_socketHandle2Session[handle] : null;
-            if (session != null)
+            if (session is not null)
             {
                 session.Write(data);
             }

@@ -1,0 +1,11 @@
+<module name="User">
+    <struct name="User">
+        <field name="account" type="string" />
+        <field name="password" type="string" />
+    </struct>
+    <enum name="LoginResult">
+        <evalue name="SUCCESS" value="0" />
+        <evalue name="REJECT" value="1" />
+        <evalue name="TIMEOUT" value="2" />
+    </enum>
+</module>

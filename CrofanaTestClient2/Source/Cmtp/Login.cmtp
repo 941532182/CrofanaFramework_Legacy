@@ -1,0 +1,9 @@
+<module name="Login">
+    <using name="User" />
+    <rpc name="CLogin" opcode="1">
+        <field name="user" type="User.User" />
+    </rpc>
+    <rpc name="SLogin" opcode="2">
+        <field name="result" type="User.LoginResult" />
+    </rpc>
+</module>

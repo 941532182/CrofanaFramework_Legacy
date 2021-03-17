@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crofana.Cache\Crofana.Cache.csproj" />
+    <ProjectReference Include="..\Crofana.Excel\Crofana.Excel.csproj" />
+    <ProjectReference Include="..\Crofana.Extension\Crofana.Extension.csproj" />
+    <ProjectReference Include="..\Crofana.IoC\Crofana.IoC.csproj" />
+    <ProjectReference Include="..\Crofana.Network\Crofana.Network.csproj" />
+  </ItemGroup>
+
+</Project>
